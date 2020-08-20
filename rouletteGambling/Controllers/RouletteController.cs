@@ -4,6 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
+using rouletteGambling.Models;
+using rouletteGambling.Models.Entities;
+using rouletteGambling.Utils.Enums;
 
 namespace rouletteGambling.Controllers
 {
@@ -11,19 +15,33 @@ namespace rouletteGambling.Controllers
     [Route("roulette")]
     public class RouletteController : ControllerBase
     {
+        private readonly RouletteModel rouletteModel;
+
+        public RouletteController(IDistributedCache distributedCache)
+        {
+            rouletteModel = new RouletteModel(distributedCache);
+        }
+
         [HttpGet]
         [Route("getallroulette")]
         public ActionResult GetAllRoulette()
         {
             try
             {
-                // Code
+                List<RouletteEntity> objRoulettes = rouletteModel.GetRoulettes();
+                var objResponseRoulettes = from roulettes in objRoulettes
+                                           select new
+                                           {
+                                               roulettes.Id,
+                                               Status = (roulettes.Status) ? StatusRouletteEnum.OPEN.ToString() : StatusRouletteEnum.CLOSE.ToString()
+                                           };
+
+                return Ok(objResponseRoulettes);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message);
             }
-            return Ok("ok");
         }
 
         [HttpPost]
@@ -32,13 +50,14 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                // Code
+                int Id = rouletteModel.CreateRoulette();
+
+                return Ok(Id);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message);
             }
-            return Ok();
         }
 
         [HttpPost]
@@ -48,12 +67,13 @@ namespace rouletteGambling.Controllers
             try
             {
                 // Code
+
+                return Ok();
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex);
+                return StatusCode(500, ex.Message);
             }
-            return Ok();
         }
     }
 }
