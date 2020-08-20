@@ -33,7 +33,7 @@ namespace rouletteGambling.Controllers
                                            select new
                                            {
                                                roulettes.Id,
-                                               Status = (roulettes.Status) ? StatusRouletteEnum.OPEN.ToString() : StatusRouletteEnum.CLOSE.ToString()
+                                               Status = Enum.GetName(typeof(StatusRouletteEnum), Convert.ToInt32(roulettes.Status))
                                            };
 
                 return Ok(objResponseRoulettes);
@@ -60,15 +60,18 @@ namespace rouletteGambling.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("openroulette")]
-        public ActionResult OpenRoulette()
+        [HttpPut("{id}")]
+        [Route("openroulette/{id}")]
+        public ActionResult OpenRoulette(int id)
         {
             try
             {
-                // Code
+                bool rouletteExist = rouletteModel.ValidRouletteExist(id);
+                if (!rouletteExist)
+                    return NotFound(ErrorEnum.ERROR_ROULETTE_NOT_EXIST.ToString());
+                bool successTransaction = rouletteModel.OpenRoulette(id);
 
-                return Ok();
+                return Ok(successTransaction);
             }
             catch (Exception ex)
             {

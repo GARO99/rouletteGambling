@@ -5,57 +5,64 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace rouletteGambling.Models
 {
     public class RouletteModel
     {
-        private readonly IDistributedCache distributedCache;
+        private readonly RedisCache.RedisCache redisCache;
 
         public RouletteModel(IDistributedCache distributedCache)
         {
-            this.distributedCache = distributedCache;
+            redisCache = new RedisCache.RedisCache(distributedCache);
         }
 
         public List<RouletteEntity> GetRoulettes()
         {
-            List<RouletteEntity> objRoulettes = new List<RouletteEntity>();
             try
             {
-                string objJsonRoulettes = distributedCache.GetString(RedisKeysEnum.Roulette.ToString());
-                if (!string.IsNullOrEmpty(objJsonRoulettes))
-                {
-                    objRoulettes = JsonSerializer.Deserialize<List<RouletteEntity>>(objJsonRoulettes);
-                }
+                List<RouletteEntity> objRoulettes = redisCache.GetRoulettesFromRedis();
+
+                return objRoulettes;
             }
             catch (Exception ex)
             {
                 throw ex;
             }
+        }
 
-            return objRoulettes;
+        public bool ValidRouletteExist(int id)
+        {
+            try
+            {
+                List<RouletteEntity> objRoulettes = GetRoulettes();
+                if (objRoulettes.Any(r => r.Id == id))
+                    return true;
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         public int CreateRoulette()
         {
             int roulettesId = 0;
-            string objJsonRoulettes;
             List<RouletteEntity> objRoulettes = new List<RouletteEntity>();
             try
             {
-                objJsonRoulettes = distributedCache.GetString(RedisKeysEnum.Roulette.ToString());
-                if (!string.IsNullOrEmpty(objJsonRoulettes))
+                objRoulettes = GetRoulettes();
+                if (objRoulettes.Count > 0)
                 {
-                    objRoulettes = JsonSerializer.Deserialize<List<RouletteEntity>>(objJsonRoulettes);
                     roulettesId = objRoulettes.Max(r => r.Id) + 1;
                     objRoulettes.Add(new RouletteEntity
                     {
                         Id = roulettesId,
                         Status = false
                     });
-                    objJsonRoulettes = JsonSerializer.Serialize(objRoulettes);
-                    distributedCache.SetString(RedisKeysEnum.Roulette.ToString(), objJsonRoulettes);
+                    redisCache.SetRoulettesToRedis(objRoulettes);
                 }
                 else
                 {
@@ -65,8 +72,7 @@ namespace rouletteGambling.Models
                         Id = roulettesId,
                         Status = false
                     });
-                    objJsonRoulettes = JsonSerializer.Serialize(objRoulettes);
-                    distributedCache.SetString(RedisKeysEnum.Roulette.ToString(), objJsonRoulettes);
+                    redisCache.SetRoulettesToRedis(objRoulettes);
                 }
             }
             catch (Exception ex)
@@ -75,6 +81,47 @@ namespace rouletteGambling.Models
             }
 
             return roulettesId;
+        }
+
+        public bool ValidRouletteIsOpen(int id, List<RouletteEntity> objRoulettes)
+        {
+            try
+            {
+                RouletteEntity objRoulette = objRoulettes.Where(r => r.Id == id).FirstOrDefault();
+                if (objRoulette != null)
+                {
+                    if (objRoulette.Status)
+                        return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public bool OpenRoulette(int id)
+        {
+            try
+            {
+                List<RouletteEntity> objRoulettes = GetRoulettes();
+                (from roulettes in objRoulettes
+                 where roulettes.Id == id
+                 select roulettes).ToList().ForEach(r => r.Status = true);
+                bool rouletteIsOpen = ValidRouletteIsOpen(id, objRoulettes);
+                if (rouletteIsOpen)
+                {
+                    redisCache.SetRoulettesToRedis(objRoulettes);
+                }
+
+                return rouletteIsOpen;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 }

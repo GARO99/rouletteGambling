@@ -7,7 +7,7 @@ namespace rouletteGambling.Utils.Enums
 {
     public enum StatusRouletteEnum
     {
-        OPEN,
-        CLOSE
+        OPEN = 1,
+        CLOSE = 0
     }
 }
