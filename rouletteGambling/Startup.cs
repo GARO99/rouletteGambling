@@ -26,6 +26,11 @@ namespace rouletteGambling
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddDistributedRedisCache(option =>
+            {
+                option.Configuration = Configuration.GetConnectionString("RedisConnection");
+                option.InstanceName = Configuration.GetConnectionString("RedisInstanceName");
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

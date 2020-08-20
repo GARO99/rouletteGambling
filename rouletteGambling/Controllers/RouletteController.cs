@@ -12,10 +12,48 @@ namespace rouletteGambling.Controllers
     public class RouletteController : ControllerBase
     {
         [HttpGet]
-        [Route("getroulette")]
-        public ActionResult GetRoulette()
+        [Route("getallroulette")]
+        public ActionResult GetAllRoulette()
         {
+            try
+            {
+                // Code
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
             return Ok("ok");
+        }
+
+        [HttpPost]
+        [Route("createroulette")]
+        public ActionResult CreateRoulette()
+        {
+            try
+            {
+                // Code
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("openroulette")]
+        public ActionResult OpenRoulette()
+        {
+            try
+            {
+                // Code
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
+            return Ok();
         }
     }
 }
