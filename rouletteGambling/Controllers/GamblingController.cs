@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using rouletteGambling.Models;
 using rouletteGambling.Models.Entities;
 using rouletteGambling.Utils.Enums;
 using rouletteGambling.Utils.Requests;
 using rouletteGambling.Utils.Responses;
+using System;
+using System.Collections.Generic;
 
 namespace rouletteGambling.Controllers
 {
@@ -28,7 +25,7 @@ namespace rouletteGambling.Controllers
 
         [HttpPost]
         [Route("bet")]
-        public ActionResult Bet([FromHeader] string gamblerId , [FromBody] BetRequest betRequest)
+        public ActionResult Bet([FromHeader] string gamblerId, [FromBody] BetRequest betRequest)
         {
             try
             {
@@ -42,7 +39,7 @@ namespace rouletteGambling.Controllers
                 if (betId == 0)
                     return BadRequest(ErrorEnum.ERROR_GAMBLER_ALREADY_BET.ToString());
                 GamblingEntity objGambling = gamblingModel.GetOneGambling(betId, gamblerId);
-                GamblerEntity objGambler =  gamblerModel.GetOneGambler(objGambling.GamblerId);
+                GamblerEntity objGambler = gamblerModel.GetOneGambler(objGambling.GamblerId);
                 BetResponse objResponse = new BetResponse
                 {
                     GamblerId = objGambler.Id,
@@ -50,7 +47,7 @@ namespace rouletteGambling.Controllers
                     CreditsBet = objGambling.CreditsBet,
                     BetType = Enum.GetName(typeof(BetTypeEnum), objGambling.BetType),
                     BetNumber = objGambling.BetNumber,
-                    BetColor = objGambling.BetColor != null? Enum.GetName(typeof(ColorBetEnum), objGambling.BetColor) : null                   
+                    BetColor = objGambling.BetColor != null ? Enum.GetName(typeof(ColorBetEnum), objGambling.BetColor) : null
                 };
 
                 return Ok(objResponse);
@@ -71,7 +68,7 @@ namespace rouletteGambling.Controllers
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
                 if (closeBetRequest == null)
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (!gamblingModel.ValidCloseBetData(rouletteId, closeBetRequest)) 
+                if (!gamblingModel.ValidCloseBetData(rouletteId, closeBetRequest))
                     return BadRequest(gamblingModel.ErrorMessage);
                 int betId = gamblingModel.CloseBet(rouletteId, closeBetRequest);
                 List<GamblingEntity> objGambling = gamblingModel.GetGamblingxBet(betId);
@@ -98,7 +95,7 @@ namespace rouletteGambling.Controllers
                         Number = objBetResult.Number,
                         Color = Enum.GetName(typeof(ColorBetEnum), objBetResult.Color)
                     },
-                   GamblingResult = gamblingResultResponse
+                    GamblingResult = gamblingResultResponse
                 };
 
                 return Ok(closeBetResponse);

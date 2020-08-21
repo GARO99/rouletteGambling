@@ -5,7 +5,6 @@ using rouletteGambling.Utils.Requests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace rouletteGambling.Models
 {
@@ -108,7 +107,7 @@ namespace rouletteGambling.Models
         {
             try
             {
-                if (betRequest.RouletteId <= 0) 
+                if (betRequest.RouletteId <= 0)
                     return false;
                 switch (betRequest.BetType)
                 {
@@ -265,7 +264,7 @@ namespace rouletteGambling.Models
             }
         }
 
-        public void RegisterGambling(BetEntity objBet, BetRequest betRequest , string gamblerId)
+        public void RegisterGambling(BetEntity objBet, BetRequest betRequest, string gamblerId)
         {
             try
             {

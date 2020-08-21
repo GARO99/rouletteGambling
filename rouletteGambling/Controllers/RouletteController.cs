@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using rouletteGambling.Models;
 using rouletteGambling.Models.Entities;
 using rouletteGambling.Utils.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace rouletteGambling.Controllers
 {
