@@ -9,6 +9,8 @@ namespace rouletteGambling.Utils.Enums
     {
         ERROR_REQUEST_INCOMPLETE,
         ERROR_ROULETTE_NOT_EXIST,
-        ERROR_GAMBLER_NOT_EXIST
+        ERROR_ROULETTE_IS_NOT_OPEN,
+        ERROR_GAMBLER_NOT_EXIST,
+        ERROR_RULES_BET,
     }
 }

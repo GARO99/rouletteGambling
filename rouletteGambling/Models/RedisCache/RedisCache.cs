@@ -77,5 +77,65 @@ namespace rouletteGambling.Models.RedisCache
                 throw ex;
             }
         }
+
+        public List<BetEntity> GetBetsFromRedis()
+        {
+            List<BetEntity> objBets = new List<BetEntity>();
+            try
+            {
+                string objJsonBets = distributedCache.GetString(RedisKeysEnum.Bet.ToString());
+                if (!string.IsNullOrEmpty(objJsonBets))
+                    objBets = JsonSerializer.Deserialize<List<BetEntity>>(objJsonBets);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            return objBets;
+        }
+
+        public void SetBetsToRedis(List<BetEntity> objBets)
+        {
+            try
+            {
+                string objJsonBets = JsonSerializer.Serialize(objBets);
+                distributedCache.SetString(RedisKeysEnum.Bet.ToString(), objJsonBets);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public List<GamblingEntity> GetGamblingFromRedis()
+        {
+            List<GamblingEntity> objGamblings = new List<GamblingEntity>();
+            try
+            {
+                string objJsonGambling = distributedCache.GetString(RedisKeysEnum.Gambling.ToString());
+                if (!string.IsNullOrEmpty(objJsonGambling))
+                    objGamblings = JsonSerializer.Deserialize<List<GamblingEntity>>(objJsonGambling);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            return objGamblings;
+        }
+
+        public void SetGamblingToRedis(List<GamblingEntity> objGamblings)
+        {
+            try
+            {
+                string objJsonGamblings = JsonSerializer.Serialize(objGamblings);
+                distributedCache.SetString(RedisKeysEnum.Gambling.ToString(), objJsonGamblings);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
     }
 }

@@ -55,25 +55,15 @@ namespace rouletteGambling.Models
             {
                 objRoulettes = GetRoulettes();
                 if (objRoulettes.Count > 0)
-                {
                     roulettesId = objRoulettes.Max(r => r.Id) + 1;
-                    objRoulettes.Add(new RouletteEntity
-                    {
-                        Id = roulettesId,
-                        Status = false
-                    });
-                    redisCache.SetRoulettesToRedis(objRoulettes);
-                }
                 else
-                {
                     roulettesId++;
-                    objRoulettes.Add(new RouletteEntity
-                    {
-                        Id = roulettesId,
-                        Status = false
-                    });
-                    redisCache.SetRoulettesToRedis(objRoulettes);
-                }
+                objRoulettes.Add(new RouletteEntity
+                {
+                    Id = roulettesId,
+                    Status = false
+                });
+                redisCache.SetRoulettesToRedis(objRoulettes);
             }
             catch (Exception ex)
             {

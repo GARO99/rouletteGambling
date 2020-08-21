@@ -7,7 +7,7 @@ namespace rouletteGambling.Utils.Enums
 {
     public enum BetTypeEnum
     {
-        NUMBER = 1,
-        COLOR = 2
+        Number = 1,
+        Color = 2
     }
 }

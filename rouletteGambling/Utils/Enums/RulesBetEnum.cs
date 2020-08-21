@@ -5,12 +5,10 @@ using System.Threading.Tasks;
 
 namespace rouletteGambling.Utils.Enums
 {
-    public enum RedisKeysEnum
+    public enum RulesBetEnum
     {
-        Roulette,
-        Gambling,
-        Gambler,
-        Bet,
-        BetResult
+        MinBetNumber = 0,
+        MaxBetNumber = 36,
+        MaxCreditsBet = 10000
     }
 }

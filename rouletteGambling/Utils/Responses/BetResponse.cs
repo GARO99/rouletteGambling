@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace rouletteGambling.Models.Entities
+namespace rouletteGambling.Utils.Responses
 {
-    public class GamblingEntity
+    public class BetResponse
     {
-        public int BetId { get; set; }
         public string GamblerId { get; set; }
+        public string GamblerFullName { get; set; }
         public decimal CreditsBet { get; set; }
-        public int BetType { get; set; }
+        public string BetType { get; set; }
         public int? BetNumber { get; set; }
-        public int? BetColor { get; set; }
-        public bool? WonBet { get; set; }
+        public string BetColor { get; set; }
     }
 }

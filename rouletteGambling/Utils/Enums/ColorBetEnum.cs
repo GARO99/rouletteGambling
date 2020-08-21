@@ -5,12 +5,9 @@ using System.Threading.Tasks;
 
 namespace rouletteGambling.Utils.Enums
 {
-    public enum RedisKeysEnum
+    public enum ColorBetEnum
     {
-        Roulette,
-        Gambling,
-        Gambler,
-        Bet,
-        BetResult
+        Black = 1,
+        Red = 2
     }
 }

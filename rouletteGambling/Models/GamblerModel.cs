@@ -30,6 +30,20 @@ namespace rouletteGambling.Models
             }
         }
 
+        public GamblerEntity GetOneGambler(string id)
+        {
+            try
+            {
+                List<GamblerEntity> objGamblers = redisCache.GetGamblerFromRedis();
+
+                return objGamblers.Where(g => g.Id == id).FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         public bool ValidGamblerExist(string id)
         {
             try
