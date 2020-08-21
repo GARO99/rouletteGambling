@@ -39,6 +39,8 @@ namespace rouletteGambling.Controllers
                 if (!gamblingModel.ValidBetData(gamblerId, betRequest))
                     return BadRequest(gamblingModel.ErrorMessage);
                 int betId = gamblingModel.RegisterBet(gamblerId, betRequest);
+                if (betId == 0)
+                    return BadRequest(ErrorEnum.ERROR_GAMBLER_ALREADY_BET.ToString());
                 GamblingEntity objGambling = gamblingModel.GetOneGambling(betId, gamblerId);
                 GamblerEntity objGambler =  gamblerModel.GetOneGambler(objGambling.GamblerId);
                 BetResponse objResponse = new BetResponse
@@ -59,14 +61,47 @@ namespace rouletteGambling.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("closebet")]
-        public ActionResult CloseBet()
+        [HttpPut("{rouletteId}")]
+        [Route("closebet/{rouletteId}")]
+        public ActionResult CloseBet(int rouletteId, [FromBody] CloseBetRequest closeBetRequest)
         {
             try
             {
+                if (rouletteId == 0)
+                    return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
+                if (closeBetRequest == null)
+                    return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
+                if (!gamblingModel.ValidCloseBetData(rouletteId, closeBetRequest)) 
+                    return BadRequest(gamblingModel.ErrorMessage);
+                int betId = gamblingModel.CloseBet(rouletteId, closeBetRequest);
+                List<GamblingEntity> objGambling = gamblingModel.GetGamblingxBet(betId);
+                List<GamblingResultResponse> gamblingResultResponse = new List<GamblingResultResponse>();
+                foreach (GamblingEntity gambling in objGambling)
+                {
+                    GamblerEntity objGambler = gamblerModel.GetOneGambler(gambling.GamblerId);
+                    gamblingResultResponse.Add(new GamblingResultResponse
+                    {
+                        GamblerId = objGambler.Id,
+                        GamblerFullName = objGambler.FullName,
+                        CreditsBet = gambling.CreditsBet,
+                        BetType = Enum.GetName(typeof(BetTypeEnum), gambling.BetType),
+                        BetNumber = gambling.BetNumber,
+                        BetColor = gambling.BetColor != null ? Enum.GetName(typeof(ColorBetEnum), gambling.BetColor) : null,
+                        WontBet = gambling.WonBet.Value
+                    });
+                }
+                BetResultEntity objBetResult = gamblingModel.GetOneBetResult(betId);
+                CloseBetResponse closeBetResponse = new CloseBetResponse
+                {
+                    BetResult = new BetResultResponse
+                    {
+                        Number = objBetResult.Number,
+                        Color = Enum.GetName(typeof(ColorBetEnum), objBetResult.Color)
+                    },
+                   GamblingResult = gamblingResultResponse
+                };
 
-                return Ok();
+                return Ok(closeBetResponse);
             }
             catch (Exception ex)
             {

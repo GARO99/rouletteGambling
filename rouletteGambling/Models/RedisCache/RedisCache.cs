@@ -137,5 +137,35 @@ namespace rouletteGambling.Models.RedisCache
                 throw ex;
             }
         }
+
+        public List<BetResultEntity> GetBetResultFromRedis()
+        {
+            List<BetResultEntity> objBetResult = new List<BetResultEntity>();
+            try
+            {
+                string objJsonBetResult = distributedCache.GetString(RedisKeysEnum.BetResult.ToString());
+                if (!string.IsNullOrEmpty(objJsonBetResult))
+                    objBetResult = JsonSerializer.Deserialize<List<BetResultEntity>>(objJsonBetResult);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            return objBetResult;
+        }
+
+        public void SetBetResultToRedis(List<BetResultEntity> objBetResult)
+        {
+            try
+            {
+                string objJsonBetResult = JsonSerializer.Serialize(objBetResult);
+                distributedCache.SetString(RedisKeysEnum.BetResult.ToString(), objJsonBetResult);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
     }
 }

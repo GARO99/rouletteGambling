@@ -52,12 +52,39 @@ namespace rouletteGambling.Models
             }
         }
 
-        public BetEntity GetOneBet(int RouletteId)
+        public List<BetResultEntity> GetBetResults()
+        {
+            try
+            {
+                List<BetResultEntity> objBets = redisCache.GetBetResultFromRedis();
+
+                return objBets;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public BetEntity GetOneBet(int rouletteId)
         {
             try
             {
                 List<BetEntity> objBets = GetBets();
-                return objBets.Where(b => b.RouletteId == RouletteId && b.Status == true).FirstOrDefault();
+                return objBets.Where(b => b.RouletteId == rouletteId && b.Status == true).FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public BetResultEntity GetOneBetResult(int betId)
+        {
+            try
+            {
+                List<BetResultEntity> objBets = GetBetResults();
+                return objBets.Where(b => b.BetId == betId).FirstOrDefault();
             }
             catch (Exception ex)
             {
@@ -69,6 +96,12 @@ namespace rouletteGambling.Models
         {
             List<GamblingEntity> objGamblings = GetGamblings();
             return objGamblings.Where(g => g.BetId == betId && g.GamblerId == gamblerId).FirstOrDefault();
+        }
+
+        public List<GamblingEntity> GetGamblingxBet(int betId)
+        {
+            List<GamblingEntity> objGamblings = GetGamblings();
+            return objGamblings.Where(g => g.BetId == betId).ToList();
         }
 
         public bool ValidBetRequest(BetRequest betRequest)
@@ -105,6 +138,23 @@ namespace rouletteGambling.Models
             }
         }
 
+        public bool ValidCloseBetRequest(CloseBetRequest closeBetRequest)
+        {
+            try
+            {
+                if (closeBetRequest.BetResultNumber < (int)RulesBetEnum.MinBetNumber || closeBetRequest.BetResultNumber > (int)RulesBetEnum.MaxBetNumber)
+                    return false;
+                if (closeBetRequest.BetResultColor != (int)ColorBetEnum.Black && closeBetRequest.BetResultColor != (int)ColorBetEnum.Red)
+                    return false;
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         public bool ValidBetData(string gamblerId, BetRequest betRequest)
         {
             try
@@ -125,6 +175,40 @@ namespace rouletteGambling.Models
                     return false;
                 }
                 if (!rouletteModel.ValidRouletteIsOpen(betRequest.RouletteId, rouletteModel.GetRoulettes()))
+                {
+                    ErrorMessage = ErrorEnum.ERROR_ROULETTE_IS_NOT_OPEN.ToString();
+                    return false;
+                }
+                GamblerEntity objGambler = gamblerModel.GetOneGambler(gamblerId);
+                if ((objGambler.Credits - betRequest.CreditsBet) < 0)
+                {
+                    ErrorMessage = ErrorEnum.ERROR_GAMBLER_DOES_NOT_HAVE_CREDITS.ToString();
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public bool ValidCloseBetData(int rouletteId, CloseBetRequest closeBetRequest)
+        {
+            try
+            {
+                if (!ValidCloseBetRequest(closeBetRequest))
+                {
+                    ErrorMessage = ErrorEnum.ERROR_RULES_BET.ToString();
+                    return false;
+                }
+                if (!rouletteModel.ValidRouletteExist(rouletteId))
+                {
+                    ErrorMessage = ErrorEnum.ERROR_ROULETTE_NOT_EXIST.ToString();
+                    return false;
+                }
+                if (!rouletteModel.ValidRouletteIsOpen(rouletteId, rouletteModel.GetRoulettes()))
                 {
                     ErrorMessage = ErrorEnum.ERROR_ROULETTE_IS_NOT_OPEN.ToString();
                     return false;
@@ -204,6 +288,22 @@ namespace rouletteGambling.Models
             }
         }
 
+        public bool ValidGamblerAlreadyBet(int betId, string gamblerId)
+        {
+            try
+            {
+                GamblingEntity objGambling = GetOneGambling(betId, gamblerId);
+                if (objGambling != null)
+                    return true;
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         public int RegisterBet(string gamblerId, BetRequest betRequest)
         {
             try
@@ -213,9 +313,74 @@ namespace rouletteGambling.Models
                     objBet = GetOneBet(betRequest.RouletteId);
                 else
                     objBet = CreateBet(betRequest.RouletteId);
+                if (ValidGamblerAlreadyBet(objBet.Id, gamblerId))
+                    return 0;
                 RegisterGambling(objBet, betRequest, gamblerId);
                 GamblerEntity objGambler = gamblerModel.GetOneGambler(gamblerId);
                 gamblerModel.UpdateGamblerCredits(gamblerId, objGambler.Credits - betRequest.CreditsBet);
+
+                return objBet.Id;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public void RegisterBetResult(int betId, CloseBetRequest closeBetRequest)
+        {
+            try
+            {
+                List<BetResultEntity> betResults = GetBetResults();
+                betResults.Add(new BetResultEntity
+                {
+                    BetId = betId,
+                    Number = closeBetRequest.BetResultNumber,
+                    Color = closeBetRequest.BetResultColor
+                });
+                redisCache.SetBetResultToRedis(betResults);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public void RegistarGamblingResult(int betId, CloseBetRequest closeBetRequest)
+        {
+            try
+            {
+                List<GamblingEntity> objGamblings = GetGamblings();
+                (from gamblings in objGamblings
+                 where gamblings.BetId == betId && (gamblings.BetColor == closeBetRequest.BetResultColor || gamblings.BetNumber == closeBetRequest.BetResultNumber)
+                 select gamblings).ToList().ForEach(g => g.WonBet = true);
+                redisCache.SetGamblingToRedis(objGamblings);
+                objGamblings = GetGamblings();
+                (from gamblings in objGamblings
+                 where gamblings.BetId == betId && gamblings.WonBet == null
+                 select gamblings).ToList().ForEach(g => g.WonBet = false);
+                redisCache.SetGamblingToRedis(objGamblings);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public int CloseBet(int rouletteId, CloseBetRequest closeBetRequest)
+        {
+            try
+            {
+                if (!rouletteModel.CloseRoulette(rouletteId))
+                    return 0;
+                List<BetEntity> objBets = GetBets();
+                BetEntity objBet = GetOneBet(rouletteId);
+                (from bets in objBets
+                 where bets.RouletteId == rouletteId && bets.Status == true
+                 select bets).ToList().ForEach(b => b.Status = false);
+                redisCache.SetBetsToRedis(objBets);
+                RegisterBetResult(objBet.Id, closeBetRequest);
+                RegistarGamblingResult(objBet.Id, closeBetRequest);
 
                 return objBet.Id;
             }

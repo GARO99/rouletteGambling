@@ -109,5 +109,23 @@ namespace rouletteGambling.Models
                 throw ex;
             }
         }
+
+        public bool CloseRoulette(int id)
+        {
+            try
+            {
+                List<RouletteEntity> objRoulettes = GetRoulettes();
+                (from roulettes in objRoulettes
+                 where roulettes.Id == id
+                 select roulettes).ToList().ForEach(r => r.Status = false);
+                redisCache.SetRoulettesToRedis(objRoulettes);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
     }
 }
