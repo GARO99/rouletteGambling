@@ -110,13 +110,9 @@ namespace rouletteGambling.Models
                 (from roulettes in objRoulettes
                  where roulettes.Id == id
                  select roulettes).ToList().ForEach(r => r.Status = true);
-                bool rouletteIsOpen = ValidRouletteIsOpen(id, objRoulettes);
-                if (rouletteIsOpen)
-                {
-                    redisCache.SetRoulettesToRedis(objRoulettes);
-                }
+                redisCache.SetRoulettesToRedis(objRoulettes);
 
-                return rouletteIsOpen;
+                return true;
             }
             catch (Exception ex)
             {

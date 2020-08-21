@@ -66,8 +66,7 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                bool rouletteExist = rouletteModel.ValidRouletteExist(id);
-                if (!rouletteExist)
+                if (!rouletteModel.ValidRouletteExist(id))
                     return NotFound(ErrorEnum.ERROR_ROULETTE_NOT_EXIST.ToString());
                 bool successTransaction = rouletteModel.OpenRoulette(id);
 
