@@ -21,7 +21,6 @@ namespace rouletteGambling.Models
         {
             try
             {
-
                 return redisCache.GetGamblingFromRedis();
             }
             catch (Exception ex)
@@ -43,19 +42,7 @@ namespace rouletteGambling.Models
 
         }
 
-        public List<GamblingEntity> GetGamblingxBet(int betId)
-        {
-            try
-            {
-                return GetGamblings().Where(g => g.BetId == betId).ToList();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public void RegisterGambling(BetEntity objBet, BetRequest betRequest, string gamblerId)
+        public void InsertGambling(BetEntity objBet, BetRequest betRequest, string gamblerId)
         {
             try
             {
@@ -78,7 +65,7 @@ namespace rouletteGambling.Models
             }
         }
 
-        public void RegistarGamblingResult(int betId, CloseBetRequest closeBetRequest)
+        public void UpdateGamblingsToSaveResult(int betId, CloseBetRequest closeBetRequest)
         {
             try
             {

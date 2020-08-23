@@ -8,6 +8,7 @@ using rouletteGambling.Utils.Responses;
 using rouletteGambling.Utils.Validations;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace rouletteGambling.Controllers
 {
@@ -18,6 +19,7 @@ namespace rouletteGambling.Controllers
         private readonly GamblingModel gamblingModel;
         private readonly GamblerModel gamblerModel;
         private readonly BetModel betModel;
+        private readonly BetResultModel betResultModel;
         private readonly BetValidation betValidation;
 
         public GamblingController(IDistributedCache distributedCache)
@@ -26,6 +28,7 @@ namespace rouletteGambling.Controllers
             gamblerModel = new GamblerModel(distributedCache);
             betModel = new BetModel(distributedCache);
             betValidation = new BetValidation(distributedCache);
+            betResultModel = new BetResultModel(distributedCache);
         }
 
         [HttpPost]
@@ -76,7 +79,7 @@ namespace rouletteGambling.Controllers
                 if (!betValidation.ValidCloseBetData(rouletteId, closeBetRequest))
                     return BadRequest(betValidation.ErrorMessage);
                 int betId = betModel.CloseBet(rouletteId, closeBetRequest);
-                List<GamblingEntity> objGambling = gamblingModel.GetGamblingxBet(betId);
+                List<GamblingEntity> objGambling = gamblingModel.GetGamblings().Where(g => g.BetId == betId).ToList();
                 List<GamblingResultResponse> gamblingResultResponse = new List<GamblingResultResponse>();
                 foreach (GamblingEntity gambling in objGambling)
                 {
@@ -92,7 +95,7 @@ namespace rouletteGambling.Controllers
                         WontBet = gambling.WonBet.Value
                     });
                 }
-                BetResultEntity objBetResult = betModel.GetOneBetResult(betId);
+                BetResultEntity objBetResult = betResultModel.GetOneBetResult(betId);
                 CloseBetResponse closeBetResponse = new CloseBetResponse
                 {
                     BetResult = new BetResultResponse

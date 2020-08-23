@@ -53,7 +53,7 @@ namespace rouletteGambling.Models
             return roulettesId;
         }
 
-        public bool ChangeStatusRoulette(int id, bool status)
+        public bool UpdateStatusRoulette(int id, bool status)
         {
             try
             {

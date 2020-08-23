@@ -69,7 +69,7 @@ namespace rouletteGambling.Controllers
             {
                 if (!rouletteValidation.ValidRouletteExist(id))
                     return NotFound(ErrorEnum.ERROR_ROULETTE_NOT_EXIST.ToString());
-                bool successTransaction = rouletteModel.ChangeStatusRoulette(id, true);
+                bool successTransaction = rouletteModel.UpdateStatusRoulette(id, true);
 
                 return Ok(successTransaction);
             }

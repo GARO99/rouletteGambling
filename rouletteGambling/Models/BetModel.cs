@@ -11,6 +11,7 @@ namespace rouletteGambling.Models
     public class BetModel
     {
         private readonly RedisCache.RedisCache redisCache;
+        private readonly BetResultModel betResultModel;
         private readonly GamblerModel gamblerModel;
         private readonly RouletteModel rouletteModel;
         private readonly GamblingModel gamblingModel;
@@ -20,6 +21,7 @@ namespace rouletteGambling.Models
         public BetModel(IDistributedCache distributedCache)
         {
             redisCache = new RedisCache.RedisCache(distributedCache);
+            betResultModel = new BetResultModel(distributedCache);
             gamblerModel = new GamblerModel(distributedCache);
             rouletteModel = new RouletteModel(distributedCache);
             gamblingModel = new GamblingModel(distributedCache);
@@ -39,37 +41,11 @@ namespace rouletteGambling.Models
             }
         }
 
-        public List<BetResultEntity> GetBetResults()
+        public BetEntity GetOneBet(int betId)
         {
             try
             {
-                List<BetResultEntity> objBets = redisCache.GetBetResultFromRedis();
-
-                return objBets;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public BetEntity GetOneBet(int rouletteId)
-        {
-            try
-            {
-                return GetBets().Where(b => b.RouletteId == rouletteId && b.Status == true).FirstOrDefault();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public BetResultEntity GetOneBetResult(int betId)
-        {
-            try
-            {
-                return GetBetResults().Where(b => b.BetId == betId).FirstOrDefault();
+                return GetBets().Where(b => b.RouletteId == betId).FirstOrDefault();
             }
             catch (Exception ex)
             {
@@ -83,14 +59,13 @@ namespace rouletteGambling.Models
             {
                 BetEntity objBet;
                 if (betValidation.ValidBetWithRouletteExist(betRequest.RouletteId))
-                    objBet = GetOneBet(betRequest.RouletteId);
+                    objBet = GetBets().Where(b => b.RouletteId == betRequest.RouletteId && b.Status == true).FirstOrDefault();
                 else
                     objBet = CreateBet(betRequest.RouletteId);
                 if (gamblingValidation.ValidGamblerAlreadyBetOnGambling(objBet.Id, gamblerId))
                     return 0;
-                gamblingModel.RegisterGambling(objBet, betRequest, gamblerId);
-                GamblerEntity objGambler = gamblerModel.GetOneGambler(gamblerId);
-                gamblerModel.UpdateGamblerCredits(gamblerId, objGambler.Credits - betRequest.CreditsBet);
+                gamblingModel.InsertGambling(objBet, betRequest, gamblerId);
+                gamblerModel.UpdateGamblerCredits(gamblerId, gamblerModel.GetOneGambler(gamblerId).Credits - betRequest.CreditsBet);
 
                 return objBet.Id;
             }
@@ -100,18 +75,25 @@ namespace rouletteGambling.Models
             }
         }
 
-        public void RegisterBetResult(int betId, CloseBetRequest closeBetRequest)
+        public BetEntity CreateBet(int RouletteId)
         {
+            int betId = 0;
             try
             {
-                List<BetResultEntity> betResults = GetBetResults();
-                betResults.Add(new BetResultEntity
+                List<BetEntity> objBets = GetBets();
+                if (objBets.Count > 0)
+                    betId = objBets.Max(b => b.Id) + 1;
+                else
+                    betId++;
+                objBets.Add(new BetEntity
                 {
-                    BetId = betId,
-                    Number = closeBetRequest.BetResultNumber,
-                    Color = closeBetRequest.BetResultColor
+                    Id = betId,
+                    RouletteId = RouletteId,
+                    Status = true
                 });
-                redisCache.SetBetResultToRedis(betResults);
+                redisCache.SetBetsToRedis(objBets);
+
+                return GetOneBet(betId);
             }
             catch (Exception ex)
             {
@@ -119,25 +101,15 @@ namespace rouletteGambling.Models
             }
         }
 
-        public BetEntity CreateBet(int RouletteId)
+        public void UpdateStatusBet(int Id, bool status)
         {
-            int BetId = 0;
             try
             {
                 List<BetEntity> objBets = GetBets();
-                if (objBets.Count > 0)
-                    BetId = objBets.Max(b => b.Id) + 1;
-                else
-                    BetId++;
-                objBets.Add(new BetEntity
-                {
-                    Id = BetId,
-                    RouletteId = RouletteId,
-                    Status = true
-                });
+                (from bets in objBets
+                 where bets.Id == Id
+                 select bets).ToList().ForEach(b => b.Status = status);
                 redisCache.SetBetsToRedis(objBets);
-
-                return GetOneBet(RouletteId);
             }
             catch (Exception ex)
             {
@@ -149,16 +121,12 @@ namespace rouletteGambling.Models
         {
             try
             {
-                if (!rouletteModel.ChangeStatusRoulette(rouletteId, false))
+                if (!rouletteModel.UpdateStatusRoulette(rouletteId, false))
                     return 0;
-                List<BetEntity> objBets = GetBets();
-                BetEntity objBet = GetOneBet(rouletteId);
-                (from bets in objBets
-                 where bets.RouletteId == rouletteId && bets.Status == true
-                 select bets).ToList().ForEach(b => b.Status = false);
-                redisCache.SetBetsToRedis(objBets);
-                RegisterBetResult(objBet.Id, closeBetRequest);
-                gamblingModel.RegistarGamblingResult(objBet.Id, closeBetRequest);
+                BetEntity objBet = GetBets().Where(b => b.RouletteId == rouletteId && b.Status == true).FirstOrDefault();
+                UpdateStatusBet(objBet.Id, status:false);
+                betResultModel.InsertBetResult(objBet.Id, closeBetRequest);
+                gamblingModel.UpdateGamblingsToSaveResult(objBet.Id, closeBetRequest);
 
                 return objBet.Id;
             }
