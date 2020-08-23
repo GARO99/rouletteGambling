@@ -55,32 +55,14 @@ namespace rouletteGambling.Models
             return roulettesId;
         }
 
-        public bool OpenRoulette(int id)
+        public bool ChangeStatusRoulette(int id, bool status)
         {
             try
             {
                 List<RouletteEntity> objRoulettes = GetRoulettes();
                 (from roulettes in objRoulettes
                  where roulettes.Id == id
-                 select roulettes).ToList().ForEach(r => r.Status = true);
-                redisCache.SetRoulettesToRedis(objRoulettes);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public bool CloseRoulette(int id)
-        {
-            try
-            {
-                List<RouletteEntity> objRoulettes = GetRoulettes();
-                (from roulettes in objRoulettes
-                 where roulettes.Id == id
-                 select roulettes).ToList().ForEach(r => r.Status = false);
+                 select roulettes).ToList().ForEach(r => r.Status = status);
                 redisCache.SetRoulettesToRedis(objRoulettes);
 
                 return true;

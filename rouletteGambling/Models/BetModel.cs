@@ -153,7 +153,7 @@ namespace rouletteGambling.Models
         {
             try
             {
-                if (!rouletteModel.CloseRoulette(rouletteId))
+                if (!rouletteModel.ChangeStatusRoulette(rouletteId, false))
                     return 0;
                 List<BetEntity> objBets = GetBets();
                 BetEntity objBet = GetOneBet(rouletteId);
