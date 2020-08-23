@@ -16,11 +16,13 @@ namespace rouletteGambling.Controllers
     {
         private readonly GamblingModel gamblingModel;
         private readonly GamblerModel gamblerModel;
+        private readonly BetModel betModel;
 
         public GamblingController(IDistributedCache distributedCache)
         {
             gamblingModel = new GamblingModel(distributedCache);
             gamblerModel = new GamblerModel(distributedCache);
+            betModel = new BetModel(distributedCache);
         }
 
         [HttpPost]
@@ -33,9 +35,9 @@ namespace rouletteGambling.Controllers
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
                 if (betRequest == null)
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (!gamblingModel.ValidBetData(gamblerId, betRequest))
-                    return BadRequest(gamblingModel.ErrorMessage);
-                int betId = gamblingModel.RegisterBet(gamblerId, betRequest);
+                if (!betModel.ValidBetData(gamblerId, betRequest))
+                    return BadRequest(betModel.ErrorMessage);
+                int betId = betModel.RegisterBet(gamblerId, betRequest);
                 if (betId == 0)
                     return BadRequest(ErrorEnum.ERROR_GAMBLER_ALREADY_BET.ToString());
                 GamblingEntity objGambling = gamblingModel.GetOneGambling(betId, gamblerId);
@@ -68,9 +70,9 @@ namespace rouletteGambling.Controllers
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
                 if (closeBetRequest == null)
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (!gamblingModel.ValidCloseBetData(rouletteId, closeBetRequest))
-                    return BadRequest(gamblingModel.ErrorMessage);
-                int betId = gamblingModel.CloseBet(rouletteId, closeBetRequest);
+                if (!betModel.ValidCloseBetData(rouletteId, closeBetRequest))
+                    return BadRequest(betModel.ErrorMessage);
+                int betId = betModel.CloseBet(rouletteId, closeBetRequest);
                 List<GamblingEntity> objGambling = gamblingModel.GetGamblingxBet(betId);
                 List<GamblingResultResponse> gamblingResultResponse = new List<GamblingResultResponse>();
                 foreach (GamblingEntity gambling in objGambling)
@@ -87,7 +89,7 @@ namespace rouletteGambling.Controllers
                         WontBet = gambling.WonBet.Value
                     });
                 }
-                BetResultEntity objBetResult = gamblingModel.GetOneBetResult(betId);
+                BetResultEntity objBetResult = betModel.GetOneBetResult(betId);
                 CloseBetResponse closeBetResponse = new CloseBetResponse
                 {
                     BetResult = new BetResultResponse
