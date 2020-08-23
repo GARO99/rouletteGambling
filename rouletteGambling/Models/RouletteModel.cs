@@ -29,22 +29,6 @@ namespace rouletteGambling.Models
             }
         }
 
-        public bool ValidRouletteExist(int id)
-        {
-            try
-            {
-                List<RouletteEntity> objRoulettes = GetRoulettes();
-                if (objRoulettes.Any(r => r.Id == id))
-                    return true;
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
         public int CreateRoulette()
         {
             int roulettesId = 0;
@@ -69,25 +53,6 @@ namespace rouletteGambling.Models
             }
 
             return roulettesId;
-        }
-
-        public bool ValidRouletteIsOpen(int id, List<RouletteEntity> objRoulettes)
-        {
-            try
-            {
-                RouletteEntity objRoulette = objRoulettes.Where(r => r.Id == id).FirstOrDefault();
-                if (objRoulette != null)
-                {
-                    if (objRoulette.Status)
-                        return true;
-                }
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
         }
 
         public bool OpenRoulette(int id)

@@ -81,22 +81,6 @@ namespace rouletteGambling.Models
             }
         }
 
-        public bool ValidGamblerAlreadyBetOnGambling(int betId, string gamblerId)
-        {
-            try
-            {
-                GamblingEntity objGambling = GetOneGambling(betId, gamblerId);
-                if (objGambling != null)
-                    return true;
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
         public void RegistarGamblingResult(int betId, CloseBetRequest closeBetRequest)
         {
             try

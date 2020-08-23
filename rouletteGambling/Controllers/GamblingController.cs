@@ -5,6 +5,7 @@ using rouletteGambling.Models.Entities;
 using rouletteGambling.Utils.Enums;
 using rouletteGambling.Utils.Requests;
 using rouletteGambling.Utils.Responses;
+using rouletteGambling.Utils.Validations;
 using System;
 using System.Collections.Generic;
 
@@ -17,12 +18,14 @@ namespace rouletteGambling.Controllers
         private readonly GamblingModel gamblingModel;
         private readonly GamblerModel gamblerModel;
         private readonly BetModel betModel;
+        private readonly BetValidation betValidation;
 
         public GamblingController(IDistributedCache distributedCache)
         {
             gamblingModel = new GamblingModel(distributedCache);
             gamblerModel = new GamblerModel(distributedCache);
             betModel = new BetModel(distributedCache);
+            betValidation = new BetValidation(distributedCache);
         }
 
         [HttpPost]
@@ -35,8 +38,8 @@ namespace rouletteGambling.Controllers
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
                 if (betRequest == null)
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (!betModel.ValidBetData(gamblerId, betRequest))
-                    return BadRequest(betModel.ErrorMessage);
+                if (!betValidation.ValidBetData(gamblerId, betRequest))
+                    return BadRequest(betValidation.ErrorMessage);
                 int betId = betModel.RegisterBet(gamblerId, betRequest);
                 if (betId == 0)
                     return BadRequest(ErrorEnum.ERROR_GAMBLER_ALREADY_BET.ToString());
@@ -70,8 +73,8 @@ namespace rouletteGambling.Controllers
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
                 if (closeBetRequest == null)
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (!betModel.ValidCloseBetData(rouletteId, closeBetRequest))
-                    return BadRequest(betModel.ErrorMessage);
+                if (!betValidation.ValidCloseBetData(rouletteId, closeBetRequest))
+                    return BadRequest(betValidation.ErrorMessage);
                 int betId = betModel.CloseBet(rouletteId, closeBetRequest);
                 List<GamblingEntity> objGambling = gamblingModel.GetGamblingxBet(betId);
                 List<GamblingResultResponse> gamblingResultResponse = new List<GamblingResultResponse>();

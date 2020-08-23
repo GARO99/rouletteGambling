@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using rouletteGambling.Models;
 using rouletteGambling.Models.Entities;
 using rouletteGambling.Utils.Enums;
+using rouletteGambling.Utils.Validations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,12 @@ namespace rouletteGambling.Controllers
     public class RouletteController : ControllerBase
     {
         private readonly RouletteModel rouletteModel;
+        private readonly RouletteValidation rouletteValidation;
 
         public RouletteController(IDistributedCache distributedCache)
         {
             rouletteModel = new RouletteModel(distributedCache);
+            rouletteValidation = new RouletteValidation(distributedCache);
         }
 
         [HttpGet]
@@ -64,7 +67,7 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                if (!rouletteModel.ValidRouletteExist(id))
+                if (!rouletteValidation.ValidRouletteExist(id))
                     return NotFound(ErrorEnum.ERROR_ROULETTE_NOT_EXIST.ToString());
                 bool successTransaction = rouletteModel.OpenRoulette(id);
 

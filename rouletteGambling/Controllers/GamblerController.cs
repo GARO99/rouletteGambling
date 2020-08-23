@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using rouletteGambling.Models;
 using rouletteGambling.Models.Entities;
 using rouletteGambling.Utils.Enums;
+using rouletteGambling.Utils.Validations;
 using System;
 using System.Collections.Generic;
 
@@ -13,10 +14,12 @@ namespace rouletteGambling.Controllers
     public class GamblerController : ControllerBase
     {
         private readonly GamblerModel gamblerModel;
+        private readonly GamblerValidation gamblerValidation;
 
         public GamblerController(IDistributedCache distributedCache)
         {
             gamblerModel = new GamblerModel(distributedCache);
+            gamblerValidation = new GamblerValidation(distributedCache);
         }
 
         [HttpGet]
@@ -65,7 +68,7 @@ namespace rouletteGambling.Controllers
             {
                 if (string.IsNullOrEmpty(id))
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (!gamblerModel.ValidGamblerExist(id))
+                if (!gamblerValidation.ValidGamblerExist(id))
                     return BadRequest(ErrorEnum.ERROR_GAMBLER_NOT_EXIST.ToString());
                 bool successTransaction = gamblerModel.UpdateGamblerCredits(id, credits);
 
