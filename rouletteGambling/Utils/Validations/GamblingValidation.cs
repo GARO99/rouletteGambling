@@ -21,8 +21,7 @@ namespace rouletteGambling.Utils.Validations
         {
             try
             {
-                GamblingEntity objGambling = gamblingModel.GetOneGambling(betId, gamblerId);
-                if (objGambling != null)
+                if (gamblingModel.GetOneGambling(betId, gamblerId) != null)
                     return true;
 
                 return false;

@@ -21,8 +21,7 @@ namespace rouletteGambling.Utils.Validations
         {
             try
             {
-                List<GamblerEntity> objGamblers = gamblerModel.GetGambler();
-                if (objGamblers.Any(g => g.Id == id))
+                if (gamblerModel.GetGambler().Any(g => g.Id == id))
                     return true;
 
                 return false;

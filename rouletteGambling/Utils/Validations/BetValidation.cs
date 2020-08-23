@@ -148,8 +148,7 @@ namespace rouletteGambling.Utils.Validations
         {
             try
             {
-                List<BetEntity> objBets = betModel.GetBets();
-                BetEntity objBet = objBets.Where(b => b.RouletteId == RouletteId && b.Status == true).FirstOrDefault();
+                BetEntity objBet = betModel.GetBets().Where(b => b.RouletteId == RouletteId && b.Status == true).FirstOrDefault();
                 if (objBet == null)
                     return false;
 

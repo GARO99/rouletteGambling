@@ -21,9 +21,8 @@ namespace rouletteGambling.Models
         {
             try
             {
-                List<GamblingEntity> objGamblings = redisCache.GetGamblingFromRedis();
 
-                return objGamblings;
+                return redisCache.GetGamblingFromRedis();
             }
             catch (Exception ex)
             {
@@ -35,8 +34,7 @@ namespace rouletteGambling.Models
         {
             try
             {
-                List<GamblingEntity> objGamblings = GetGamblings();
-                return objGamblings.Where(g => g.BetId == betId && g.GamblerId == gamblerId).FirstOrDefault();
+                return GetGamblings().Where(g => g.BetId == betId && g.GamblerId == gamblerId).FirstOrDefault();
             }
             catch (Exception ex)
             {
@@ -49,8 +47,7 @@ namespace rouletteGambling.Models
         {
             try
             {
-                List<GamblingEntity> objGamblings = GetGamblings();
-                return objGamblings.Where(g => g.BetId == betId).ToList();
+                return GetGamblings().Where(g => g.BetId == betId).ToList();
             }
             catch (Exception ex)
             {

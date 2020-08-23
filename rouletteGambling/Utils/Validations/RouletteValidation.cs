@@ -21,8 +21,7 @@ namespace rouletteGambling.Utils.Validations
         {
             try
             {
-                List<RouletteEntity> objRoulettes = rouletteModel.GetRoulettes();
-                if (objRoulettes.Any(r => r.Id == id))
+                if (rouletteModel.GetRoulettes().Any(r => r.Id == id))
                     return true;
 
                 return false;

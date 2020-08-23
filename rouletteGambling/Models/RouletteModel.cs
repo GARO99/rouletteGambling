@@ -19,9 +19,7 @@ namespace rouletteGambling.Models
         {
             try
             {
-                List<RouletteEntity> objRoulettes = redisCache.GetRoulettesFromRedis();
-
-                return objRoulettes;
+                return redisCache.GetRoulettesFromRedis();
             }
             catch (Exception ex)
             {
