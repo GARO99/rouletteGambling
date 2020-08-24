@@ -1,14 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
-using rouletteGambling.Models;
-using rouletteGambling.Models.Entities;
+using rouletteGambling.Rules;
 using rouletteGambling.Utils.Enums;
 using rouletteGambling.Utils.Requests;
-using rouletteGambling.Utils.Responses;
 using rouletteGambling.Utils.Validations;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace rouletteGambling.Controllers
 {
@@ -16,19 +12,13 @@ namespace rouletteGambling.Controllers
     [Route("gambling")]
     public class GamblingController : ControllerBase
     {
-        private readonly GamblingModel gamblingModel;
-        private readonly GamblerModel gamblerModel;
-        private readonly BetModel betModel;
-        private readonly BetResultModel betResultModel;
+        private readonly CBet cBet;
         private readonly BetValidation betValidation;
 
         public GamblingController(IDistributedCache distributedCache)
         {
-            gamblingModel = new GamblingModel(distributedCache);
-            gamblerModel = new GamblerModel(distributedCache);
-            betModel = new BetModel(distributedCache);
+            cBet = new CBet(distributedCache);
             betValidation = new BetValidation(distributedCache);
-            betResultModel = new BetResultModel(distributedCache);
         }
 
         [HttpPost]
@@ -37,28 +27,15 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(gamblerId))
-                    return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (betRequest == null)
+                if (string.IsNullOrEmpty(gamblerId) || betRequest == null)
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
                 if (!betValidation.ValidBetData(gamblerId, betRequest))
                     return BadRequest(betValidation.ErrorMessage);
-                int betId = betModel.RegisterBet(gamblerId, betRequest);
+                int betId = cBet.RegisterBet(gamblerId, betRequest);
                 if (betId == 0)
                     return BadRequest(ErrorEnum.ERROR_GAMBLER_ALREADY_BET.ToString());
-                GamblingEntity objGambling = gamblingModel.GetOneGambling(betId, gamblerId);
-                GamblerEntity objGambler = gamblerModel.GetOneGambler(objGambling.GamblerId);
-                BetResponse objResponse = new BetResponse
-                {
-                    GamblerId = objGambler.Id,
-                    GamblerFullName = objGambler.FullName,
-                    CreditsBet = objGambling.CreditsBet,
-                    BetType = Enum.GetName(typeof(BetTypeEnum), objGambling.BetType),
-                    BetNumber = objGambling.BetNumber,
-                    BetColor = objGambling.BetColor != null ? Enum.GetName(typeof(ColorBetEnum), objGambling.BetColor) : null
-                };
 
-                return Ok(objResponse);
+                return Ok(cBet.BuilBetResponse(betId, gamblerId));
             }
             catch (Exception ex)
             {
@@ -72,41 +49,13 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                if (rouletteId == 0)
-                    return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (closeBetRequest == null)
+                if (rouletteId == 0 || closeBetRequest == null)
                     return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
                 if (!betValidation.ValidCloseBetData(rouletteId, closeBetRequest))
                     return BadRequest(betValidation.ErrorMessage);
-                int betId = betModel.CloseBet(rouletteId, closeBetRequest);
-                List<GamblingEntity> objGambling = gamblingModel.GetGamblings().Where(g => g.BetId == betId).ToList();
-                List<GamblingResultResponse> gamblingResultResponse = new List<GamblingResultResponse>();
-                foreach (GamblingEntity gambling in objGambling)
-                {
-                    GamblerEntity objGambler = gamblerModel.GetOneGambler(gambling.GamblerId);
-                    gamblingResultResponse.Add(new GamblingResultResponse
-                    {
-                        GamblerId = objGambler.Id,
-                        GamblerFullName = objGambler.FullName,
-                        CreditsBet = gambling.CreditsBet,
-                        BetType = Enum.GetName(typeof(BetTypeEnum), gambling.BetType),
-                        BetNumber = gambling.BetNumber,
-                        BetColor = gambling.BetColor != null ? Enum.GetName(typeof(ColorBetEnum), gambling.BetColor) : null,
-                        WontBet = gambling.WonBet.Value
-                    });
-                }
-                BetResultEntity objBetResult = betResultModel.GetOneBetResult(betId);
-                CloseBetResponse closeBetResponse = new CloseBetResponse
-                {
-                    BetResult = new BetResultResponse
-                    {
-                        Number = objBetResult.Number,
-                        Color = Enum.GetName(typeof(ColorBetEnum), objBetResult.Color)
-                    },
-                    GamblingResult = gamblingResultResponse
-                };
+                int betId = cBet.CloseBet(rouletteId, closeBetRequest);
 
-                return Ok(closeBetResponse);
+                return Ok(cBet.BuilBetResponse(betId));
             }
             catch (Exception ex)
             {

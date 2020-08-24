@@ -51,9 +51,7 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                int Id = rouletteModel.CreateRoulette();
-
-                return Ok(Id);
+                return Ok(rouletteModel.CreateRoulette());
             }
             catch (Exception ex)
             {

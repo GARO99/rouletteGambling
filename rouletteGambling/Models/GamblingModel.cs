@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using rouletteGambling.Models.Entities;
-using rouletteGambling.Utils.Enums;
 using rouletteGambling.Utils.Requests;
 using System;
 using System.Collections.Generic;
