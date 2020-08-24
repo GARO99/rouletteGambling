@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using rouletteGambling.Models.Entities;
-using rouletteGambling.Utils.Validations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,12 +9,10 @@ namespace rouletteGambling.Models
     public class GamblerModel
     {
         private readonly RedisCache.RedisCache redisCache;
-        private readonly GamblerValidation gamblerValidation;
 
         public GamblerModel(IDistributedCache distributedCache)
         {
             redisCache = new RedisCache.RedisCache(distributedCache);
-            gamblerValidation = new GamblerValidation(distributedCache);
         }
 
         public List<GamblerEntity> GetGambler()
@@ -46,8 +43,6 @@ namespace rouletteGambling.Models
         {
             try
             {
-                if (gamblerValidation.ValidGamblerExist(objGambler.Id))
-                    return false;
                 List<GamblerEntity> objGamblers = GetGambler();
                 objGamblers.Add(objGambler);
                 redisCache.SetGamblerToRedis(objGamblers);

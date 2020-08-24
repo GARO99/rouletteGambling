@@ -1,12 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
-using rouletteGambling.Models;
-using rouletteGambling.Models.Entities;
-using rouletteGambling.Utils.Enums;
-using rouletteGambling.Utils.Validations;
+using rouletteGambling.Services;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace rouletteGambling.Controllers
 {
@@ -14,13 +9,11 @@ namespace rouletteGambling.Controllers
     [Route("roulette")]
     public class RouletteController : ControllerBase
     {
-        private readonly RouletteModel rouletteModel;
-        private readonly RouletteValidation rouletteValidation;
+        private readonly RouletteService rouletteService;
 
         public RouletteController(IDistributedCache distributedCache)
         {
-            rouletteModel = new RouletteModel(distributedCache);
-            rouletteValidation = new RouletteValidation(distributedCache);
+            rouletteService = new RouletteService(distributedCache);
         }
 
         [HttpGet]
@@ -29,15 +22,7 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                List<RouletteEntity> objRoulettes = rouletteModel.GetRoulettes();
-                var objResponseRoulettes = from roulettes in objRoulettes
-                                           select new
-                                           {
-                                               roulettes.Id,
-                                               Status = Enum.GetName(typeof(StatusRouletteEnum), Convert.ToInt32(roulettes.Status))
-                                           };
-
-                return Ok(objResponseRoulettes);
+                return Ok(rouletteService.GetAllRoulette());
             }
             catch (Exception ex)
             {
@@ -51,7 +36,7 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                return Ok(rouletteModel.CreateRoulette());
+                return Ok(rouletteService.CreateRoulette());
             }
             catch (Exception ex)
             {
@@ -65,9 +50,11 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                if (!rouletteValidation.ValidRouletteExist(id))
-                    return NotFound(ErrorEnum.ERROR_ROULETTE_NOT_EXIST.ToString());
-                bool successTransaction = rouletteModel.UpdateStatusRoulette(id, true);
+                bool successTransaction = rouletteService.OpenRoulette(id);
+                if (!successTransaction && !string.IsNullOrEmpty(rouletteService.ErrorMessage))
+                {
+                    return BadRequest(rouletteService.ErrorMessage);
+                }
 
                 return Ok(successTransaction);
             }

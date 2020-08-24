@@ -31,7 +31,7 @@ namespace rouletteGambling.Models
         {
             try
             {
-                return GetBets().Where(b => b.RouletteId == betId).FirstOrDefault();
+                return GetBets().Where(b => b.Id == betId).FirstOrDefault();
             }
             catch (Exception ex)
             {

@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
-using rouletteGambling.Models;
 using rouletteGambling.Models.Entities;
-using rouletteGambling.Utils.Enums;
-using rouletteGambling.Utils.Validations;
+using rouletteGambling.Services;
 using System;
-using System.Collections.Generic;
 
 namespace rouletteGambling.Controllers
 {
@@ -13,13 +10,11 @@ namespace rouletteGambling.Controllers
     [Route("gambler")]
     public class GamblerController : ControllerBase
     {
-        private readonly GamblerModel gamblerModel;
-        private readonly GamblerValidation gamblerValidation;
+        private readonly GamblerService gamblerService;
 
         public GamblerController(IDistributedCache distributedCache)
         {
-            gamblerModel = new GamblerModel(distributedCache);
-            gamblerValidation = new GamblerValidation(distributedCache);
+            gamblerService = new GamblerService(distributedCache);
         }
 
         [HttpGet]
@@ -28,9 +23,7 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                List<GamblerEntity> objGamblers = gamblerModel.GetGambler();
-
-                return Ok(objGamblers);
+                return Ok(gamblerService.GetGambler());
             }
             catch (Exception ex)
             {
@@ -44,13 +37,11 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                if (objGamblerRequest == null)
-                    return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (string.IsNullOrEmpty(objGamblerRequest.Id) || string.IsNullOrEmpty(objGamblerRequest.FullName))
-                    return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (objGamblerRequest.Credits <= 0)
-                    return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                bool successTransaction = gamblerModel.CreateGambler(objGamblerRequest);
+                bool successTransaction = gamblerService.CreateGambler(objGamblerRequest);
+                if (!successTransaction && !string.IsNullOrEmpty(gamblerService.ErrorMessage))
+                {
+                    return BadRequest(gamblerService.ErrorMessage);
+                }
 
                 return Ok(successTransaction);
             }
@@ -66,11 +57,11 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(id))
-                    return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (!gamblerValidation.ValidGamblerExist(id))
-                    return BadRequest(ErrorEnum.ERROR_GAMBLER_NOT_EXIST.ToString());
-                bool successTransaction = gamblerModel.UpdateGamblerCredits(id, credits);
+                bool successTransaction = gamblerService.UpdateGamblerCredits(id, credits);
+                if (!successTransaction && !string.IsNullOrEmpty(gamblerService.ErrorMessage))
+                {
+                    return BadRequest(gamblerService.ErrorMessage);
+                }
 
                 return Ok(successTransaction);
             }

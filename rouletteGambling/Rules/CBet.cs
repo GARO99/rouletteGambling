@@ -55,6 +55,29 @@ namespace rouletteGambling.Rules
             }
         }
 
+        public int CloseBet(int rouletteId, CloseBetRequest closeBetRequest)
+        {
+            try
+            {
+                if (!rouletteModel.UpdateStatusRoulette(rouletteId, status: false))
+                    return 0;
+                BetEntity objBet = betModel.GetBets().Where(b => b.RouletteId == rouletteId && b.Status == true).FirstOrDefault();
+                betModel.UpdateStatusBet(objBet.Id, status: false);
+                betResultModel.InsertBetResult(objBet.Id, closeBetRequest);
+                gamblingModel.UpdateGamblingsToSaveResult(objBet.Id, closeBetRequest);
+                foreach (GamblingEntity gambling in gamblingModel.GetGamblings().Where(g => g.BetId == objBet.Id && g.WonBet == true).ToList())
+                {
+                    gamblerModel.UpdateGamblerCredits(gambling.GamblerId, gamblerModel.GetOneGambler(gambling.GamblerId).Credits + (gambling.CreditsBet * 2));
+                }
+
+                return objBet.Id;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         public BetResponse BuilBetResponse(int betId, string gamblerId)
         {
             try
@@ -72,25 +95,6 @@ namespace rouletteGambling.Rules
                 };
 
                 return objResponse;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public int CloseBet(int rouletteId, CloseBetRequest closeBetRequest)
-        {
-            try
-            {
-                if (!rouletteModel.UpdateStatusRoulette(rouletteId, false))
-                    return 0;
-                BetEntity objBet = betModel.GetBets().Where(b => b.RouletteId == rouletteId && b.Status == true).FirstOrDefault();
-                betModel.UpdateStatusBet(objBet.Id, status: false);
-                betResultModel.InsertBetResult(objBet.Id, closeBetRequest);
-                gamblingModel.UpdateGamblingsToSaveResult(objBet.Id, closeBetRequest);
-
-                return objBet.Id;
             }
             catch (Exception ex)
             {

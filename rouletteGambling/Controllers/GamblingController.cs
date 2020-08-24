@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
-using rouletteGambling.Rules;
-using rouletteGambling.Utils.Enums;
+using rouletteGambling.Services;
 using rouletteGambling.Utils.Requests;
-using rouletteGambling.Utils.Validations;
+using rouletteGambling.Utils.Responses;
 using System;
 
 namespace rouletteGambling.Controllers
@@ -12,13 +11,11 @@ namespace rouletteGambling.Controllers
     [Route("gambling")]
     public class GamblingController : ControllerBase
     {
-        private readonly CBet cBet;
-        private readonly BetValidation betValidation;
+        private readonly GamblingService gamblingService;
 
         public GamblingController(IDistributedCache distributedCache)
         {
-            cBet = new CBet(distributedCache);
-            betValidation = new BetValidation(distributedCache);
+            gamblingService = new GamblingService(distributedCache);
         }
 
         [HttpPost]
@@ -27,15 +24,11 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(gamblerId) || betRequest == null)
-                    return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (!betValidation.ValidBetData(gamblerId, betRequest))
-                    return BadRequest(betValidation.ErrorMessage);
-                int betId = cBet.RegisterBet(gamblerId, betRequest);
-                if (betId == 0)
-                    return BadRequest(ErrorEnum.ERROR_GAMBLER_ALREADY_BET.ToString());
+                BetResponse objBetResponse = gamblingService.Bet(gamblerId, betRequest);
+                if (objBetResponse == null && !string.IsNullOrEmpty(gamblingService.ErrorMessage))
+                    return BadRequest(gamblingService.ErrorMessage);
 
-                return Ok(cBet.BuilBetResponse(betId, gamblerId));
+                return Ok(objBetResponse);
             }
             catch (Exception ex)
             {
@@ -49,13 +42,11 @@ namespace rouletteGambling.Controllers
         {
             try
             {
-                if (rouletteId == 0 || closeBetRequest == null)
-                    return BadRequest(ErrorEnum.ERROR_REQUEST_INCOMPLETE.ToString());
-                if (!betValidation.ValidCloseBetData(rouletteId, closeBetRequest))
-                    return BadRequest(betValidation.ErrorMessage);
-                int betId = cBet.CloseBet(rouletteId, closeBetRequest);
+                CloseBetResponse closeBetResponse = gamblingService.CloseBet(rouletteId, closeBetRequest);
+                if (closeBetResponse == null && !string.IsNullOrEmpty(gamblingService.ErrorMessage))
+                    return BadRequest(gamblingService.ErrorMessage);
 
-                return Ok(cBet.BuilBetResponse(betId));
+                return Ok(closeBetResponse);
             }
             catch (Exception ex)
             {
