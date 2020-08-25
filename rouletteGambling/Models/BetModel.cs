@@ -8,11 +8,11 @@ namespace rouletteGambling.Models
 {
     public class BetModel
     {
-        private readonly RedisCache.RedisCache redisCache;
+        private readonly RedisCache.RedisCacheBet redisCache;
 
         public BetModel(IDistributedCache distributedCache)
         {
-            redisCache = new RedisCache.RedisCache(distributedCache);
+            redisCache = new RedisCache.RedisCacheBet(distributedCache);
         }
 
         public List<BetEntity> GetBets()
@@ -39,21 +39,16 @@ namespace rouletteGambling.Models
             }
         }
 
-        public BetEntity CreateBet(int RouletteId)
+        public BetEntity CreateBet(int betId, int RouletteId, bool status)
         {
-            int betId = 0;
             try
             {
                 List<BetEntity> objBets = GetBets();
-                if (objBets.Count > 0)
-                    betId = objBets.Max(b => b.Id) + 1;
-                else
-                    betId++;
                 objBets.Add(new BetEntity
                 {
                     Id = betId,
                     RouletteId = RouletteId,
-                    Status = true
+                    Status = status
                 });
                 redisCache.SetBetsToRedis(objBets);
 

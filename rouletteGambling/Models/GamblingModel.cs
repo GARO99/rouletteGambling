@@ -9,11 +9,11 @@ namespace rouletteGambling.Models
 {
     public class GamblingModel
     {
-        private readonly RedisCache.RedisCache redisCache;
+        private readonly RedisCache.RedisCacheGambling redisCache;
 
         public GamblingModel(IDistributedCache distributedCache)
         {
-            redisCache = new RedisCache.RedisCache(distributedCache);
+            redisCache = new RedisCache.RedisCacheGambling(distributedCache);
         }
 
         public List<GamblingEntity> GetGamblings()

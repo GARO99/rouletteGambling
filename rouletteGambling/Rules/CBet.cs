@@ -6,6 +6,7 @@ using rouletteGambling.Utils.Requests;
 using rouletteGambling.Utils.Responses;
 using rouletteGambling.Utils.Validations;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace rouletteGambling.Rules
@@ -41,7 +42,15 @@ namespace rouletteGambling.Rules
                 if (betValidation.ValidBetWithRouletteExist(betRequest.RouletteId))
                     objBet = betModel.GetBets().Where(b => b.RouletteId == betRequest.RouletteId && b.Status == true).FirstOrDefault();
                 else
-                    objBet = betModel.CreateBet(betRequest.RouletteId);
+                {
+                    int betId = 0;
+                    List<BetEntity> objBets = betModel.GetBets();
+                    if (objBets.Count > 0)
+                        betId = objBets.Max(b => b.Id) + 1;
+                    else
+                        betId++;
+                    objBet = betModel.CreateBet(betId, betRequest.RouletteId, status: true);
+                }
                 if (gamblingValidation.ValidGamblerAlreadyBetOnGambling(objBet.Id, gamblerId))
                     return 0;
                 gamblingModel.InsertGambling(objBet, betRequest, gamblerId);
@@ -59,7 +68,7 @@ namespace rouletteGambling.Rules
         {
             try
             {
-                if (!rouletteModel.UpdateStatusRoulette(rouletteId, status: false))
+                if (!rouletteModel.UpdateRoulette(rouletteId, status: false))
                     return 0;
                 BetEntity objBet = betModel.GetBets().Where(b => b.RouletteId == rouletteId && b.Status == true).FirstOrDefault();
                 betModel.UpdateStatusBet(objBet.Id, status: false);

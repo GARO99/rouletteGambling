@@ -8,11 +8,11 @@ namespace rouletteGambling.Models
 {
     public class RouletteModel
     {
-        private readonly RedisCache.RedisCache redisCache;
+        private readonly RedisCache.RedisCacheRoulette redisCache;
 
         public RouletteModel(IDistributedCache distributedCache)
         {
-            redisCache = new RedisCache.RedisCache(distributedCache);
+            redisCache = new RedisCache.RedisCacheRoulette(distributedCache);
         }
 
         public List<RouletteEntity> GetRoulettes()
@@ -27,21 +27,15 @@ namespace rouletteGambling.Models
             }
         }
 
-        public int CreateRoulette()
+        public int CreateRoulette(int roulettesId, bool status)
         {
-            int roulettesId = 0;
-            List<RouletteEntity> objRoulettes = new List<RouletteEntity>();
             try
             {
-                objRoulettes = GetRoulettes();
-                if (objRoulettes.Count > 0)
-                    roulettesId = objRoulettes.Max(r => r.Id) + 1;
-                else
-                    roulettesId++;
+                List<RouletteEntity> objRoulettes = GetRoulettes();
                 objRoulettes.Add(new RouletteEntity
                 {
                     Id = roulettesId,
-                    Status = false
+                    Status = status
                 });
                 redisCache.SetRoulettesToRedis(objRoulettes);
             }
@@ -53,7 +47,7 @@ namespace rouletteGambling.Models
             return roulettesId;
         }
 
-        public bool UpdateStatusRoulette(int id, bool status)
+        public bool UpdateRoulette(int id, bool status)
         {
             try
             {

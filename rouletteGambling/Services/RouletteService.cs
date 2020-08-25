@@ -42,9 +42,15 @@ namespace rouletteGambling.Services
 
         public int CreateRoulette()
         {
+            int roulettesId = 0;
             try
             {
-                return rouletteModel.CreateRoulette();
+                List<RouletteEntity> objRoulettes = rouletteModel.GetRoulettes();
+                if (objRoulettes.Count > 0)
+                    roulettesId = objRoulettes.Max(r => r.Id) + 1;
+                else
+                    roulettesId++;
+                return rouletteModel.CreateRoulette(roulettesId, status: false);
             }
             catch (Exception ex)
             {
@@ -62,7 +68,7 @@ namespace rouletteGambling.Services
                     return false;
                 }
 
-                return rouletteModel.UpdateStatusRoulette(id, true);
+                return rouletteModel.UpdateRoulette(id, status: true);
             }
             catch (Exception ex)
             {
